@@ -1,3 +1,17 @@
+# My Project
+
+NHK_easy_news/audacity
+
+NHK_easy_news/Latex
+#!NHK_easy_news/Latex/NHK.tex
+
+NHK_easy_news/audio
+#NHK_easy_news/audio/*.mp3
+
+NHK_easy_news/news_text
+
+frdic/archive
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
