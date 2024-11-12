@@ -4,6 +4,7 @@ from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
 
 import time
+from re import split
 from datetime import datetime
 from pathlib import Path
 
@@ -17,6 +18,7 @@ class FrenchSentenceCrawler:
         self.sentence = None
         self.translation = None
         self.analysis = None
+        self.max_filename_length = 64
         self.crawler()
 
     def crawler(self):
@@ -107,11 +109,55 @@ class FrenchSentenceCrawler:
 
     def create_archive(self):
         """
-        Create a directory with the current date and name of the sentence. 
-        Then save each piece of content to a file with the same name as the sentence.
+        Creates a new folder in the `archive` directory with today's date
+        and the first part of the sentence as the folder name.
+
+        Inside the folder, it creates a text file with the same name as the
+        folder. The text file has the following content:
+
+        - daytime (2 line breaks)
+        - taget_url (2 line breaks)
+        - sentence (1 line break)
+        - translation (2 line breaks)
+        - analysis (1 line break)
+
+        If any of the attributes are empty, it will print a message saying
+        "No [attribute name]."
+
+        If there is an error creating the folder or text file, it will print
+        an error message.
+
+        Parameters:
+        ----------
+
+        self : FrdicCrawler
+            The instance of the FrdicCrawler class.
+
+        Returns:
+        -------
+
+        None
+
+        Exceptions:
+        ----------
+
+        None
+
+        Notes:
+        -----
+
+        The folder name will be in the format of "YYYY-MM-DD_ShortFilename",
+        and the text file name will be the same as the folder name with a
+        `.txt` extension.
         """
         today_date = datetime.now().strftime('%Y-%m-%d')
-        path = Path(f'./archive/{today_date}_{self.sentence}')
+        # Extract the first part of the sentence to use as a short filename
+        # The first part means text before the most first dot or comma
+        short_filename = split(r'[\.,]', str(self.sentence))[0]
+        if len(short_filename) > self.max_filename_length:
+            short_filename = short_filename[:self.max_filename_length]
+
+        path = Path(f'./archive/{today_date}_{short_filename}')
 
         if not path.exists():
             try:
@@ -128,15 +174,15 @@ class FrenchSentenceCrawler:
             'analysis': (self.analysis, 1)
         }
 
-        filename = f"{path}/{self.sentence}.txt"
+        txt_filepath = f"{path}/{short_filename}.txt"
         try:
-            with open(filename, 'w', encoding='utf-8') as f:
+            with open(txt_filepath, 'w', encoding='utf-8') as f:
                 for cont_name, (cont_value, line_breaks) in contents.items():
                     if cont_value:
                         f.write(f'{cont_value}'+'\n'*line_breaks)
                     else:
                         print(f"No {cont_name}.")
-            print(f"Created text file: {filename}")
+            print(f"Created text file: \n{txt_filepath}")
         except Exception as e:
             print(f"Error creating text file: {e}")
 
@@ -144,5 +190,6 @@ class FrenchSentenceCrawler:
 if __name__ == "__main__":
     url = "https://www.frdic.com/"
     crawler = FrenchSentenceCrawler(url)
+    crawler.max_filename_length = 90
     crawler.build_content()
     crawler.create_archive()
